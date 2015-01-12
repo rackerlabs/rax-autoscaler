@@ -3,7 +3,7 @@
 Uses the rackspace APIs to allow for scaling based on aggregate metrics across a cluster.
 Can be used and installed on the auto-scale group members or on a dedicated management instance.
 
-- [GitHub repository](https://github.com/boxidau/rax-autoscaler)
+- [GitHub repository](https://github.com/rackerlabs/rax-autoscaler)
 - [PyPI package](https://pypi.python.org/pypi/rax-autoscaler)
 
 [![Stories in Ready](https://badge.waffle.io/boxidau/rax-autoscaler.svg?label=ready&title=Ready)](http://waffle.io/boxidau/rax-autoscaler) [![Documentation Status](https://readthedocs.org/projects/rax-autoscaler/badge/?version=latest)](https://readthedocs.org/projects/rax-autoscaler/) [![Travis CI status](https://travis-ci.org/boxidau/rax-autoscaler.svg)](https://travis-ci.org/boxidau/rax-autoscaler/builds)
