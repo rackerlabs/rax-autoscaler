@@ -45,6 +45,7 @@ teddy.schmitz@rackspace.com, jon.walton@rackspace.com''',
         "console_scripts": ['autoscale = raxas.autoscale:main',
                             'autoscale-config = raxas.autoscale_config:main'],
         "raxas.ext": ['raxmon = raxas.core_plugins.raxmon:Raxmon',
+                      'raxmon_autoscale = raxas.core_plugins.raxmon_autoscale:Raxmon_autoscale',
                       'raxclb = raxas.core_plugins.raxclb:Raxclb']
     },
     keywords='rax rackspace autoscale scaling devops cloud openstack',
