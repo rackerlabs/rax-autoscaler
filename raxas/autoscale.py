@@ -96,8 +96,11 @@ def autoscale(group, config_data, args):
     if not args['dry_run']:
         scaling_group.execute_webhook(scale, HookType.Pre)
 
-        if scaling_group.execute_policy(scale) == ScaleEvent.Success:
+        policy_result = scaling_group.execute_policy(scale)
+        if policy_result == ScaleEvent.Success:
             scaling_group.execute_webhook(scale, HookType.Post)
+            return ScaleEvent.Success
+        elif policy_result == ScaleEvent.NoAction:
             return ScaleEvent.Success
         else:
             return ScaleEvent.Error
