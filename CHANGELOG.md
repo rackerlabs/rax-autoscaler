@@ -1,7 +1,7 @@
 rax-autoscaler CHANGELOG
 ==========================
 
-0.2.28
+NEW
 ------
 - [Suraj Thapa] - Added CHANGELOG.md
 - [Suraj Thapa] - Increased start and end time difference in get_metric_data_points to get data from cloud monitoring.
