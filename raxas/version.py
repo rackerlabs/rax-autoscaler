@@ -18,7 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION = "0.2.27"
+VERSION = "0.2.28"
 
 
 def return_version():
