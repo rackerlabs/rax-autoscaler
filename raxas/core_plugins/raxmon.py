@@ -77,7 +77,7 @@ class Raxmon(PluginBase):
             for check in ent_checks:
                 if check.type == self.check_type:
                     data = check.get_metric_data_points(self.metric_name,
-                                                        int(time.time())-300,
+                                                        int(time.time())-600,
                                                         int(time.time()),
                                                         points=2)
                     if len(data) > 0:
