@@ -118,7 +118,7 @@ def parse_args():
     parser.add_argument('--os-password', required=False,
                         help='Rackspace Cloud account API key')
     parser.add_argument('--config-file', required=False, default='config.json',
-                        help='The autoscale configuration .ini file.'
+                        help='The autoscale configuration .json file.'
                              '(Cloud Files: cloudfiles://CONTAINER_NAME/FILE_NAME)'
                              '(default: config.json)'),
     parser.add_argument('--os-region-name', required=False,
@@ -166,7 +166,7 @@ def main():
         logger.info('Configuration file source is Local')
         config_file = args['config_file']
 
-    # CONFIG.ini
+    # CONFIG.json
     config_file = common.check_file(config_file)
     if config_file is None:
         common.exit_with_error('Either file is missing or is not readable: %s'
