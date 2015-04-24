@@ -268,7 +268,7 @@ def check_source(fpath):
 
 
 def get_cloudfiles(args):
-    """This function downloads a file from cloud files
+    """This function downloads a file from Cloud Files
 
       :param args:
       :returns: file path
