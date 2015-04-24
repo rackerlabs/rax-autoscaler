@@ -26,6 +26,7 @@ import json
 import logging
 from uuid import UUID
 import netifaces
+import re
 
 
 def get_logger():
@@ -250,3 +251,45 @@ def is_ipv4(address):
         return True
     except socket.error:
         return False
+
+
+def check_source(fpath):
+    """This function checks file source
+
+      :param fname: file path
+      :returns: source
+
+    """
+    source = 'local'
+    if re.match('^cloudfiles:', fpath):
+        source = 'cloudfiles'
+
+    return source
+
+
+def get_cloudfiles(args):
+    """This function downloads a file from cloud files
+
+      :param args:
+      :returns: file path
+
+    """
+    logger = get_logger()
+
+    fpath_list = re.split('\/*', args['config_file'])
+    container_name = fpath_list[1]
+    del fpath_list[0:2]
+    obj_to_download = '/'.join(fpath_list)
+    targetDir = os.getcwd()
+
+    logger.info('Cloud Files container name: %s', container_name)
+    logger.info('File to download from Cloud Files: %s', obj_to_download)
+    logger.info('Download path: %s', targetDir)
+    pyrax.set_setting("identity_type", "rackspace")
+    pyrax.set_default_region(args['os_region_name'])
+    pyrax.set_credentials(args['os_username'], args['os_password'])
+    cf = pyrax.cloudfiles
+
+    cf.download_object(container_name, obj_to_download, targetDir,
+                       structure=False)
+    return targetDir + '/' + fpath_list[-1]
