@@ -253,24 +253,23 @@ def is_ipv4(address):
         return False
 
 
-def check_source(fpath):
+def is_cloudfiles_file(fpath):
     """This function checks file source
 
       :param fname: file path
-      :returns: source
+      :returns: boolean
 
     """
-    source = 'local'
     if re.match('^cloudfiles:', fpath):
-        source = 'cloudfiles'
+        return True
 
-    return source
+    return False
 
 
 def get_cloudfiles(args):
     """This function downloads a file from Cloud Files
 
-      :param args:
+      :param args: dictionary with user arguments
       :returns: file path
 
     """
@@ -282,9 +281,8 @@ def get_cloudfiles(args):
     obj_to_download = '/'.join(fpath_list)
     targetDir = os.getcwd()
 
-    logger.info('Cloud Files container name: %s', container_name)
-    logger.info('File to download from Cloud Files: %s', obj_to_download)
-    logger.info('Download path: %s', targetDir)
+    logger.info("Cloud Files container name: %s, file to download: %s, "
+                "download path: %s" % (container_name, obj_to_download, targetDir))
     pyrax.set_setting("identity_type", "rackspace")
     pyrax.set_default_region(args['os_region_name'])
     pyrax.set_credentials(args['os_username'], args['os_password'])

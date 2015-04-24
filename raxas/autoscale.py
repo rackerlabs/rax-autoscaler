@@ -148,11 +148,8 @@ def main():
         logger.debug('argument provided by user ' + arg + ' : ' +
                      str(args[arg]))
 
-    # Check config_file source, if cloud file user must provide api_key & username.
-    file_source = common.check_source(args['config_file'])
-
     # If source is Cloud Files user must provide api_key & username.
-    if file_source is 'cloudfiles':
+    if common.is_cloudfiles_file(args['config_file']):
         logger.info('Configuration file source is Cloud Files')
 
         if None in (args['os_username'], args['os_password'], args['os_region_name']):
