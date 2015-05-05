@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 #
 # this file is part of 'RAX-AutoScaler'
@@ -17,6 +16,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Example Config
+#     "raxmon":{
+#         "scale_up_threshold": 0.6,
+#         "scale_down_threshold": 0.4,
+#         "check_config": {},
+#         "metric_name": "1m",
+#         "check_type": "agent.load_average",
+#         "max_samples": 10
+#     }
 
 import logging
 import random
