@@ -43,6 +43,7 @@ class Raxmon_autoscale(PluginBase):
         self.metric_name = config.get('metric_name', 'scale_me')
         self.check_type = config.get('check_type', 'agent.plugin')
         self.max_samples = config.get('max_samples', 10)
+        self.lb = config.get('load_balancer', None)
         self.scaling_group = scaling_group
 
     @property
@@ -70,6 +71,7 @@ class Raxmon_autoscale(PluginBase):
         self.add_entity_checks(entities)
 
         logger.info('Gathering Monitoring Data')
+
 
         # Shuffle entities so the sample uses different servers
         entities = random.sample(entities, len(entities))
@@ -117,7 +119,34 @@ class Raxmon_autoscale(PluginBase):
             winner = max(scale_actions.iteritems(), key=operator.itemgetter(1))[0]
             logger.info("Collective decision: %s" % winner) 
 
+
+        if winner == scale_down and self.lb:
+            active_server_count = self.scaling_group.state['active_capacity']
+            num_healthy_nodes = self.get_lb_status(self.lb)
+            if num_healthy_nodes < active_server_count:
+                logger.warning("Consensus was to scale down - but number of servers in scaling group (%s) exceeds the number of healthy nodes in the load balancer (%s). NOT scaling down!" % (active_server_count, num_healthy_nodes))
+                winner = do_nothing
+
         return winner
+
+    def get_lb_status(self, load_balancer):
+        """ This function cehcks that the nodes behind a loadbalancer are healthy.
+            This is in order to prevent scaling down when the nodes in an existing group
+            are unhealthy
+        """
+        clb = pyrax.cloud_loadbalancers
+        lb = clb.get(load_balancer)
+        # If there are no nodes at all under an LB, the attribute 'nodes' doesn't exist at all
+        try:
+            nodes = lb.nodes
+        except AttributeError as e:
+            return 0
+
+        num_healthy = 0
+        for node in lb.nodes:
+            if node.status == "ONLINE" and node.condition == "ENABLED":
+                num_healthy += 1
+        return num_healthy
 
     def add_entity_checks(self, entities):
         """This function ensures each entity has a cloud monitoring check.
