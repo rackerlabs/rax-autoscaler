@@ -1,4 +1,8 @@
 #!/usr/bin/python
+
+# This file goes into /usr/lib/rackspace-monitoring-agent/plugins/
+# Remember to chmod +x
+
 import os
 import subprocess
 from decimal import *
