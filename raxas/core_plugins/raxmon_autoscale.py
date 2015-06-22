@@ -27,6 +27,7 @@ from raxas.core_plugins.base import PluginBase
 
 
 class Raxmon_autoscale(PluginBase):
+
     """ Rackspace cloud monitoring plugin.
 
     """
@@ -72,7 +73,6 @@ class Raxmon_autoscale(PluginBase):
 
         logger.info('Gathering Monitoring Data')
 
-
         # Shuffle entities so the sample uses different servers
         entities = random.sample(entities, len(entities))
 
@@ -81,11 +81,11 @@ class Raxmon_autoscale(PluginBase):
             for check in ent_checks:
                 if check.type == self.check_type:
                     data = check.get_metric_data_points(self.metric_name,
-                                                        int(time.time())-300,
+                                                        int(time.time()) - 300,
                                                         int(time.time()),
                                                         resolution='FULL')
                     if len(data) > 0:
-                        point = len(data)-1
+                        point = len(data) - 1
                         logger.info('Found metric for: %s, value: %s',
                                     ent.name, str(data[point]['average']))
                         results.append(data[point]['average'])
@@ -101,7 +101,7 @@ class Raxmon_autoscale(PluginBase):
         scale_down = -1
         scale_up = 1
         do_nothing = 0
-        scale_actions = { scale_down: 0, do_nothing: 0, scale_up: 0 }
+        scale_actions = {scale_down: 0, do_nothing: 0, scale_up: 0}
         winner = 0
         if num_results == 0:
             logger.error('No data available')
@@ -109,22 +109,25 @@ class Raxmon_autoscale(PluginBase):
         else:
             for result in results:
                 if result not in scale_actions.keys():
-                    logger.info("Duff data back from monitoring '%s' not a valid return" % result)
+                    logger.info(
+                        "Duff data back from monitoring '%s' not a valid return" % result)
                     continue
                 scale_actions[result] += 1
             if scale_actions.get(scale_up) > 0:
-                logger.info("At least one node reports the wish to scale - scaling up...")
+                logger.info(
+                    "At least one node reports the wish to scale - scaling up...")
                 return scale_up
 
-            winner = max(scale_actions.iteritems(), key=operator.itemgetter(1))[0]
-            logger.info("Collective decision: %s" % winner) 
-
+            winner = max(
+                scale_actions.iteritems(), key=operator.itemgetter(1))[0]
+            logger.info("Collective decision: %s" % winner)
 
         if winner == scale_down and self.lb:
             active_server_count = self.scaling_group.state['active_capacity']
             num_healthy_nodes = self.get_lb_status(self.lb)
             if num_healthy_nodes < active_server_count:
-                logger.warning("Consensus was to scale down - but number of servers in scaling group (%s) exceeds the number of healthy nodes in the load balancer (%s). NOT scaling down!" % (active_server_count, num_healthy_nodes))
+                logger.warning("Consensus was to scale down - but number of servers in scaling group (%s) exceeds the number of healthy nodes in the load balancer (%s). NOT scaling down!" %
+                               (active_server_count, num_healthy_nodes))
                 winner = do_nothing
 
         return winner
@@ -136,7 +139,8 @@ class Raxmon_autoscale(PluginBase):
         """
         clb = pyrax.cloud_loadbalancers
         lb = clb.get(load_balancer)
-        # If there are no nodes at all under an LB, the attribute 'nodes' doesn't exist at all
+        # If there are no nodes at all under an LB, the attribute 'nodes'
+        # doesn't exist at all
         try:
             nodes = lb.nodes
         except AttributeError as e:
@@ -164,7 +168,8 @@ class Raxmon_autoscale(PluginBase):
 
             if not check_exists:
                 ip_address = entity.ip_addresses.values()[0]
-                logger.debug('server_id: %s, ip_address: %s', entity.agent_id, ip_address)
+                logger.debug(
+                    'server_id: %s, ip_address: %s', entity.agent_id, ip_address)
                 entity.create_check(label='%s_%s' % (self.metric_name, self.check_type),
                                     check_type=self.check_type,
                                     details=self.check_config,
