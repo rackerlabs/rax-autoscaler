@@ -186,8 +186,8 @@ def main():
     else:
         log_name = None
         if hasattr(logger.root.handlers[0], 'baseFilename'):
-            log_name = ': ' % logger.root.handlers[0].baseFilename
-        logger.info('completed successfully %s', (log_name if log_name else ''))
+            log_name = ': %s ' % logger.root.handlers[0].baseFilename
+        logger.info('completed successfully%s', (log_name if log_name else ''))
 
 
 if __name__ == '__main__':
