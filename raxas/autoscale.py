@@ -118,7 +118,8 @@ def parse_args():
     parser.add_argument('--os-password', required=False,
                         help='Rackspace Cloud account API key')
     parser.add_argument('--config-file', required=False, default='config.json',
-                        help='The autoscale configuration .ini file'
+                        help='The autoscale configuration .json file.'
+                             '(Cloud Files: cloudfiles://CONTAINER_NAME/FILE_NAME)'
                              '(default: config.json)'),
     parser.add_argument('--os-region-name', required=False,
                         help='The region to build the servers',
@@ -147,15 +148,30 @@ def main():
         logger.debug('argument provided by user ' + arg + ' : ' +
                      str(args[arg]))
 
-    # CONFIG.ini
-    config_file = common.check_file(args['config_file'])
+    # If source is Cloud Files user must provide api_key & username.
+    if common.is_cloudfiles_file(args['config_file']):
+        logger.info('Configuration file source is Cloud Files')
+
+        if None in (args['os_username'], args['os_password'], args['os_region_name']):
+            common.exit_with_error('You must provide os_username, os_region_name & ' +
+                                   'os_password when config file source is cloud files')
+
+        config_file = common.get_cloudfiles(args)
+        if config_file is None:
+            common.exit_with_error('Failed to get config file from Cloud Files')
+    else:
+        logger.info('Configuration file source is Local')
+        config_file = args['config_file']
+
+    # CONFIG.json
+    config_file = common.check_file(config_file)
     if config_file is None:
         common.exit_with_error('Either file is missing or is not readable: %s'
                                % args['config_file'])
 
     config_data = common.get_config(config_file)
     if config_data is None:
-        common.exit_with_error('Failed to read config file: ' + config_file)
+        common.exit_with_error('Failed to get config file: ' + config_file)
 
     as_group = args.get('as_group')
     if not as_group:
