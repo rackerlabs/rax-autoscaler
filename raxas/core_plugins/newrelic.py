@@ -89,8 +89,8 @@ class NewRelic(PluginBase):
                 data = a.metric_data(app_id, [self.metric_name], values=[self.metric_value],
                                      summarize=True, from_dt=then, to_dt=dt.now())
                 try:
-                    value = data["metric_data"]["metrics"][0]
-                    ["timeslices"][0]["values"][self.metric_value]
+                    value = (data["metric_data"]["metrics"][0]
+                             ["timeslices"][0]["values"][self.metric_value])
 
                     if value > 0:
                             logger.info('Found metric for: %s, value: %s',
@@ -119,8 +119,8 @@ class NewRelic(PluginBase):
                                          values=[self.metric_value], summarize=True,
                                          from_dt=then, to_dt=dt.now())
                     try:
-                        value = data["metric_data"]["metrics"][0]
-                        ["timeslices"][0]["values"][self.metric_value]
+                        value = (data["metric_data"]["metrics"][0]
+                                 ["timeslices"][0]["values"][self.metric_value])
 
                         if value > 0:
                                 logger.info('Found metric for: %s, value: %s',
