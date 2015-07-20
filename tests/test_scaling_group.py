@@ -85,7 +85,7 @@ class TestScalingGroup(BaseTest):
         self.assertIsNotNone(scaling_group, 'scaling_group should not be None')
 
     @patch('raxas.common.exit_with_error')
-    def test_does_exit_with_valid_config_missing_plugins(self, exit_mock):
+    def test_does_not_exit_with_valid_config_missing_plugins(self, exit_mock):
         config = {
             "group_id": "group id",
             "scale_up_policy": "scale up policy id",
@@ -93,7 +93,7 @@ class TestScalingGroup(BaseTest):
         }
         scaling_group = ScalingGroup(config, 'group0')
 
-        self.assertEqual(1, exit_mock.call_count, 'Exit with error not called')
+        self.assertEqual(0, exit_mock.call_count, 'Exit with error called')
         self.assertIsNotNone(scaling_group, 'scaling_group should not be None')
 
     def test_plugin_config_returned_correctly(self):

@@ -44,17 +44,35 @@ class ScalingGroup(object):
 
     @classmethod
     def check_config(cls, config):
+        logger = common.get_logger()
+
         if None in [
-                config.get('plugins'),
                 config.get('group_id'),
                 config.get('scale_up_policy'),
                 config.get('scale_down_policy')]:
             common.exit_with_error('Invalid group configuration')
+        if None in [
+                config.get('plugins')]:
+            logger.warn('DeprecationWarning: You are using a deprecated config file please update'
+                        ' your configuration file to v0.3 standard.')
+            return config
         else:
             return config
 
     @property
     def plugin_config(self):
+        if self._config.get('plugins') is None:
+            self._config['plugins'] = \
+                {
+                    'raxmon':
+                    {
+                        'scale_up_threshold': self._config.get('scale_up_threshold', 0.6),
+                        'scale_down_threshold': self._config.get('scale_down_threshold', 0.4),
+                        'check_config': self._config.get('check_config', '{}'),
+                        'metric_name': self._config.get('metric_name', '1m'),
+                        'check_type': self._config.get('check_type', 'agent.load_average')
+                    }
+                }
         return self._config.get('plugins')
 
     @property
