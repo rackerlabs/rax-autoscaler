@@ -35,7 +35,8 @@ from raxas.core_plugins.base import PluginBase
 
 
 class Raxmon(PluginBase):
-    """ Rackspace cloud monitoring plugin.
+    """
+    Rackspace cloud monitoring plugin.
 
     """
 
@@ -88,7 +89,7 @@ class Raxmon(PluginBase):
                     data = check.get_metric_data_points(self.metric_name,
                                                         int(time.time())-600,
                                                         int(time.time()),
-                                                        points=2)
+                                                        resolution='FULL')
                     if len(data) > 0:
                         point = len(data)-1
                         logger.info('Found metric for: %s, value: %s',
@@ -122,9 +123,10 @@ class Raxmon(PluginBase):
             return 0
 
     def add_entity_checks(self, entities):
-        """This function ensures each entity has a cloud monitoring check.
-           If the specific check in the json configuration data already exists, it will take
-           no action on that entity
+        """
+        This function ensures each entity has a cloud monitoring check.
+        If the specific check in the json configuration data already exists, it will take
+        no action on that entity
 
         """
         logger = logging.getLogger(__name__)

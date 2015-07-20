@@ -55,7 +55,7 @@ To use this with autoscale you would want to set the userdata of your launch con
                 "flavorRef": "general1-1",
                 "imageRef": "CentOS 6.5 (PVHVM)",
                 "key_name" : "MY_SSH_KEY",
-                "user_data" : "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=",
+                "user_data" : "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgogIHJ1bmNtZDoKICAgIC0gWyBwaXAsIGluc3RhbGwsIFJBWC1BdXRvU2NhbGVyPT0wLjIuMjkgXQo=",
                 "name": "test-autoscale"
             }
         },
@@ -71,7 +71,7 @@ This has been tested on these images:
 In the example the value of user_data contains the base64 encoded version of the following script:
 ::
 
-  echo -n "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=" | base64 -D
+  echo -n "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgogIHJ1bmNtZDoKICAgIC0gWyBwaXAsIGluc3RhbGwsIFJBWC1BdXRvU2NhbGVyPT0wLjIuMjkgXQo=" | base64 -D
 
 To base64 encode a script
 ::
@@ -82,6 +82,8 @@ Size of USER_DATA can be reduced with gzip:
 ::
 
     cat /path/to/USER_DATA | gzip | base64
+
+If you are running autoscaler through cloud-init or any other automated system it is very important that you pin the version as newer versions may introduce breaking changes with previous versions.
 
 config.json
 ===========
