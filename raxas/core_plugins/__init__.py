@@ -15,3 +15,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+Core Plugins included with raxas
+
+Monitoring Plugins
+raxmon = Rackspace Cloud Monitoring Plugin
+raxclb = Rackspace Cloud Load Balancer Plugin
+
+
+"""
+__all__ = ['raxmon', 'raxclb']

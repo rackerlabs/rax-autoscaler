@@ -10,7 +10,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,14 +22,10 @@ from __future__ import print_function
 import os
 import pyrax
 import sys
-import pyrax.exceptions as pexc
-from termcolor import colored
-import ConfigParser
-import subprocess
-import datetime
 import json
-import urllib2
 import logging
+from uuid import UUID
+import netifaces
 
 
 def get_logger():
@@ -53,11 +49,11 @@ def check_file(fname):
     if os.path.isfile(file_abspath) and os.access(file_abspath, os.R_OK):
         return file_abspath
     else:
-        preDefinedPath = '/etc/rax-autoscaler/'+fname
+        predefined_path = '/etc/rax-autoscaler/' + fname
         # Check in /etc/rax-autoscaler/config path
-        if os.path.isfile(preDefinedPath):
-            if os.access(preDefinedPath, os.R_OK):
-                return preDefinedPath
+        if os.path.isfile(predefined_path):
+            if os.access(predefined_path, os.R_OK):
+                return predefined_path
     # Either file is missing or is not readable
     return
 
@@ -70,108 +66,118 @@ def get_config(config_file):
 
     """
     logger = get_logger()
-    logger.info("Loading config file: '%s'" % config_file)
+    logger.info('Loading config file: "%s"', config_file)
     try:
         json_data = open(config_file)
         data = json.load(json_data)
         return data
-    except Exception, e:
-        logger.error("Error: " + str(e))
+    except Exception as e:
+        logger.error("Error: %s", e)
 
     return None
 
 
-def get_machine_uuid():
-    """This function uses subprocess to get node uuid and cached it for future use
-
-      :returns: server uuid
-                None
-
-    """
+def read_uuid_cache():
     logger = get_logger()
-    server_uptime = None
-    cache_uptime = None
-    cache_file = '.uuid.cache'
-    uuid = None
-    cache_content = [None] * 2
+
+    # we're storing files in /dev/shm/ to ensure the cache is deleted on reboot
+    uuid_files = ['/dev/shm/.raxas-uuid.cache',
+                  # instance-id is populated with the uuid if the server was
+                  # spun up with config_drive set to True
+                  '/var/lib/cloud/data/instance-id']
+
+    if sys.platform.startswith(('win32', 'cygwin')):
+        # Windows doesn't have a built in equivalent to /dev/shm so we'll
+        # disable file caching for now to ensure we don't have a stale cache
+        # if an image is taken of the servers running in the autoscale group
+        logger.info('no uuid caching for windows, moving on...')
+        return None
+
+    for file_path in uuid_files:
+        if not os.path.isfile(file_path):
+            continue
+
+        with open(file_path, 'r') as cache_file:
+            line = cache_file.readline().strip()
+            if line == 'iid-datasource-none':
+                # This happens if the server was spun up without config_drive
+                # set to True
+                logger.info('cloud-init datastore does not contain uuid')
+                continue
+
+            try:
+                # I'm creating a UUID object from the contents of the cache
+                # to verify it's a valid UUID. ValueError is thrown if invalid
+                uuid = UUID(line)
+                return str(uuid)
+            except ValueError:
+                logger.info('invalid uuid found in %s : %s', file_path, line)
+                continue
+
+    return None
+
+
+def write_uuid_cache(uuid):
+    logger = get_logger()
 
     try:
-        uptime_file = open('/proc/uptime')
-        contents = uptime_file.read().split()
-        uptime_file.close()
-        server_uptime = str(int(float(contents[0])))
-    except Exception, e:
-        logger.warning("Unable to get uptime")
-        logger.debug('%s' % str(e))
-        pass
-
-    if server_uptime is None:
-        logger.debug("Failed to get server uptime")
-    else:
-        logger.debug("Checking if cache file '%s' already exists" % cache_file)
-        cache_file = check_file(cache_file)
-        if cache_file is not None:
-            logger.info("Getting uptime and node id from cache file")
-            cache_content = None
-            try:
-                rfh = open(cache_file, 'r').read()
-                cache_content = rfh.split('\n')
-            except:
-                logger.warning("Unable to read a file '%s' in '%s'"
-                               % (cache_file, '/etc/rax-autoscaler'))
-                pass
-
-            if (not cache_content[0] or cache_content[0] is None
-                    or not cache_content[1] or cache_content[1] is None):
-                logger.warning("Cache file is corrupted, failed to"
-                               "read the content")
-            else:
-                try:
-                    if int(cache_content[0]) < int(server_uptime):
-                        uuid = cache_content[1]
-                    else:
-                        logger.warning("Invalid uptime found in cache file")
-                        logger.debug("uptime: %s cache uptime: %s"
-                                     % (server_uptime, cache_content[0]))
-                except:
-                    logger.warning("Invalid content found in cache file")
-                    pass
-
-        if uuid is None:
-            logger.info('Launching xenstore query to get server uuid')
-            try:
-                name = subprocess.Popen(['xenstore-read name'], shell=True,
-                                        stdout=subprocess.PIPE
-                                        ).communicate()[0]
-                id = name.strip()
-                uuid = id[9:]
-            except Exception, e:
-                logger.error("Error: " + str(e))
-                return None
-
-            if server_uptime is not None:
-                cache_file = '.uuid.cache'
-                # Check if file exists in cwd
-                if os.path.isfile(cache_file) is False:
-                    if os.path.isdir('/etc/rax-autoscaler') is True:
-                        cache_file = '/etc/rax-autoscaler/.uuid.cache'
-
-                logger.info("Creating cache file '%s'" % cache_file)
-                try:
-                    wfh = open(cache_file, 'w')
-                    wfh.write(server_uptime)
-                    wfh.write('\n')
-                    wfh.write(uuid)
-                    wfh.close()
-                except Exception, e:
-                    logger.warning("Unable to create a file '%s': '%s'"
-                                   % (cache_file, str(e)))
-                    pass
-
-    return uuid
+        with open('/dev/shm/.raxas-uuid.cache', 'w+') as cache_file:
+            logger.info('updating uuid cache /dev/shm/.raxas-uuid.cache')
+            cache_file.write('%s\n' % uuid)
+    except IOError as error:
+        logger.error('unable to write uuid cache file: %s', error.args)
 
 
-def get_user_value(args, config, key):
+def get_machine_uuid(scaling_group):
+    """This function will search for the server's UUID and return it.
+
+    First it searches in a rax-autoscaler cache, followed by cloud-init cache.
+    If it cannot find a cached UUID, it will get the details of each server in
+    the scaling group in turn and attempt to match the local IP address with
+    that of the server object returned from the API
+
+    :param scaling_group: raxas.scaling_group.ScalingGroup object
+    :return: None if no UUID could be matched against a cache file or the API.
+             UUID as a string
+    """
+    logger = get_logger()
+
+    uuid = read_uuid_cache()
+    if uuid is not None:
+        logger.info('found server UUID from cache: %s', uuid)
+        return uuid
+
+    # if we didn't get anything from any cache files, we'll loop through the
+    # servers in the scaling group, get the server details and cross check the
+    # ip addresses against what's on *this* server
+
+    local_ips = []
+    for interface in netifaces.interfaces():  # pylint: disable=E1101
+        try:
+            for ip in netifaces.ifaddresses(interface)[netifaces.AF_INET]:  # pylint: disable=E1101
+                if ip['addr'] != '127.0.0.1':
+                    local_ips.append(ip['addr'])
+        except KeyError:
+            continue
+
+    servers_api = pyrax.cloudservers
+    for active_uuid in scaling_group.active_servers:
+        server = servers_api.servers.get(active_uuid)
+
+        server_ips = [ip for network in server.networks.values()
+                      for ip in network]
+        matching_ips = set(server_ips).intersection(local_ips)
+        if len(matching_ips) > 0:
+            logger.info('found uuid from matching ip address: %s', server.id)
+            write_uuid_cache(server.id)
+            return server.id
+
+    # only reached if we couldn't read from the cache file and couldn't find
+    # this server's ip address in the scaling group's active server list
+    return None
+
+
+def get_auth_value(args, config, key):
     """This function returns value associated with the key if its available in
        user arguments else in json config file.
 
@@ -183,130 +189,64 @@ def get_user_value(args, config, key):
     """
     logger = get_logger()
     value = None
-    if args[key] is None:
-        try:
+    try:
+        if args[key] is None:
             value = config['auth'][key.lower()]
-        except:
-            logger.error("Invalid config, '" + key +
-                         "' key not found in authentication section")
-    else:
-        value = args[key]
+        else:
+            value = args[key]
+    except:
+        logger.error('Invalid config. Key: "%s" not found in authentication section', key)
 
     return value
 
 
-def get_group_value(config, group, key):
-    """This function returns value in autoscale_groups section associated with
-       provided key.
+def exit_with_error(msg):
+    """This function prints error message and exit with error.
 
-    :type config: object
-      :param group: group name
-      :param config: json configuration data
-      :param key: key name
-      :returns: value associated with key
-
-    """
-    logger = get_logger()
-    try:
-        value = config['autoscale_groups'][group][key]
-        if value is not None:
-            return value
-    except:
-        logger.error("Error: unable to get value for key '" + key +
-                     "' from group '" + group + "'")
-
-    return None
-
-
-def get_webhook_value(config, group, key):
-    """This function returns value in webhooks section of json file which is
-       associated with provided key.
-
-      :param group: group name
-      :param config: json configuration data
-      :param key: key name
-      :returns: value associated with key
-
-    """
-    logger = get_logger()
-    try:
-        value = config['autoscale_groups'][group]['webhooks'][key]
-        if value is not None:
-            return value
-    except:
-        logger.warning("Unable to find value for key: '%s' in group '%s'"
-                       % (key, group))
-
-    return None
-
-
-def webhook_call(config_data, group, policy, key):
-    """This function makes webhook calls.
-
-      :param config_data: json configuration data
-      :param group: group name
-      :param policy: policy type
-      :param key: key name
+    :param msg: error message
+    :returns: 1 (int) -- the return code
 
     """
     logger = get_logger()
 
-    logger.info('Launching %s webhook call' % key)
-    url_list = get_webhook_value(config_data, group, policy)
-    if url_list is None:
-        return None
-
-    group_id = get_group_value(config_data, group, 'group_id')
-    if group_id is None:
-        return None
-
-    up_policy_id = get_group_value(config_data, group,
-                                   'scale_up_policy')
-    if up_policy_id is None:
-        return None
-
-    down_policy_id = get_group_value(config_data, group,
-                                     'scale_down_policy')
-    if down_policy_id is None:
-        return None
-
-    check_type = get_group_value(config_data, group, 'check_type')
-    if check_type is None:
-        return None
-
-    metric_name = get_group_value(config_data, group,
-                                  'metric_name')
-    if check_type is None:
-        return None
-
-    up_threshold = get_group_value(config_data, group,
-                                   'scale_up_threshold')
-    if up_threshold is None:
-        return None
-
-    down_threshold = get_group_value(config_data, group,
-                                     'scale_down_threshold')
-    if up_threshold is None:
-        return None
-
-    data = json.dumps({'group_id': group_id,
-                       'scale_up_policy': up_policy_id,
-                       'scale_down_policy': down_policy_id,
-                       'check_type': check_type,
-                       'metric_name': metric_name,
-                       'scale_up_threshold': up_threshold,
-                       'scale_down_threshold': down_threshold})
-
-    urls = url_list[key]
-    for url in urls:
-        logger.info("Sending POST request to url: '%s'" % url)
+    if msg is None:
         try:
-            req = urllib2.Request(url, data,
-                                  {'Content-Type': 'application/json'})
-            f = urllib2.urlopen(req)
-            response = f.read()
-            f.close()
-        except Exception, e:
-            logger.warning(str(e))
+            log_file = logger.root.handlers[0].baseFilename
+            logger.info('completed with an error: %s', log_file)
+        except:
+            print('(info) rax-autoscale completed with an error')
+    else:
+        try:
+            logger.error(msg)
+            log_file = logger.root.handlers[0].baseFilename
+            logger.info('completed with an error: %s', log_file)
+        except:
+            print('(error) %s', msg)
+            print('(info) rax-autoscale completed with an error')
 
-    return None
+    sys.exit(1)
+
+
+def get_server(server_id):
+    """ It gets Cloud server object by server_id
+
+    """
+    cs = pyrax.cloudservers
+    try:
+        return [s for s in cs.list() if s.id == server_id]
+    except:
+        logging.info('no cloud server with id: %s', server_id)
+        return None
+
+
+def is_ipv4(address):
+    """It checks if address is valid IP v4
+
+    """
+    import socket
+
+    try:
+        socket.inet_aton(address)
+        return True
+    except socket.error:
+        return False

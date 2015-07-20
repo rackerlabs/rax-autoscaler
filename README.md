@@ -3,111 +3,114 @@
 Uses the rackspace APIs to allow for scaling based on aggregate metrics across a cluster.
 Can be used and installed on the auto-scale group members or on a dedicated management instance.
 
-- [GitHub repository](https://github.com/boxidau/rax-autoscaler)
+- [GitHub repository](https://github.com/rackerlabs/rax-autoscaler)
 - [PyPI package](https://pypi.python.org/pypi/rax-autoscaler)
 
-[![Stories in Ready](https://badge.waffle.io/boxidau/rax-autoscaler.svg?label=ready&title=Ready)](http://waffle.io/boxidau/rax-autoscaler)
+[![Stories in Ready](https://badge.waffle.io/boxidau/rax-autoscaler.svg?label=ready&title=Ready)](http://waffle.io/boxidau/rax-autoscaler) [![Documentation Status](https://readthedocs.org/projects/rax-autoscaler/badge/?version=latest)](https://readthedocs.org/projects/rax-autoscaler/) [![Travis CI status](https://travis-ci.org/boxidau/rax-autoscaler.svg)](https://travis-ci.org/boxidau/rax-autoscaler/builds)
+[![Coverage Status](https://coveralls.io/repos/boxidau/rax-autoscaler/badge.png?branch=devel)](https://coveralls.io/r/boxidau/rax-autoscaler?branch=devel)
 
 ## Installation
 
 ```
-pip install RAX-AutoScaler
+pip install rax-autoscaler
 ```
 
 ### Configuration
-Edit config.json adding the following:
-- API username
-- API key
-- Region name
-- Autoscaling group section should contain:
-  - AutoScale Group UUID
-  - Scale Up Policy UUID
-  - Scale Down Policy UUID
-  - Check Type (agent.cpu, agent.load_average...)
-  - Metric Name (depends on the check type)
-  - Scale Up Threshold
-  - Scale Down Threshold
-  - Webhooks Url (Pre & Post commit url(s) for scale up/down)
+[Read the Docs](http://rax-autoscaler.readthedocs.org/en/stable/)
 
-## Usage
-Once configured you can invoke the autoscaler.py script.
+### Upgrading from 0.2
 
---cluster option should be used when this script actually runs on auto-scale group members. Otherwise if it is running on a dedicated management instance you do not require this option.
+V0.3 is a major change from 0.2 and as such there are many breaking changes in the configuration file.
+Here is what you need to fix to upgrade successfully.
 
---as-group option should be used when you have multiple groups listed in the config.json file.
+The monitoring information is now a plugin and needs to be moved to the plugin section.  The only monitoring plugin available in 0.2 was raxmon so you should specify the raxmon plugin and just move the check_type, check_config, metric_name, thresholds down.
 
---config-file option should be used if config.json file does not exists in current directory or in '/etc/rax-autoscaler' path.
-
-Once tested you should configure this script to run as a cron job either on a management instance or on all cluster members
-
-##Cloud Init
-You can use the cloud-config file to auto-install RAX-Autoscaler on new servers.  For example to do so on Rackspace cloud using supernova
-
+#### Old Config
 ```
-supernova <region> boot --user-data ./cloud-config --image <image id/name> --flavor <flavor id/name> --config-drive=true <server name>
+ "autoscale_groups": {
+      "group0": {
+          "group_id": "group id",
+          "scale_up_policy": "scale up policy id",
+          "scale_down_policy": "scale down policy id",
+          "check_type": "agent.load_average",
+          "check_config": {},
+          "metric_name": "1m",
+          "scale_up_threshold": 0.6,
+          "scale_down_threshold": 0.4,
+          "webhooks": {
+              "scale_up": {
+                 "pre": [
+                      "url",
+                      "url"
+                  ],
+                 "post": [
+                      "url"
+                  ]
+              },
+              "scale_down": {
+                  "pre": [
+                      "url",
+                      "url"
+                   ],
+                 "post": [
+                    "url"
+                  ]      
+              }
+          }
+      }
+  }
 ```
 
-To use this with autoscale you would want to set the userdata of your launch configuration to the base64 encoded string of the file:
-
-
+#### New Config
 ```
-"launchConfiguration": {
-        "args": {
-            "server": {
-                "config_drive" : true,
-                "flavorRef": "general1-1",
-                "imageRef": "CentOS 6.5 (PVHVM)",
-                "key_name" : "MY_SSH_KEY",
-                "user_data" : "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=",
-                "name": "test-autoscale"
+    "autoscale_groups": {
+        "group0": {
+            "group_id": "704a2260-f4b9-46a9-be83-dbfb19919ee0",
+            "scale_up_policy": "74588ebe-7ca7-4950-9b86-e622a11295b6",
+            "scale_down_policy": "b22f4fce-132f-40af-b8c6-0e22704b1241",
+            "webhooks": {
+                "scale_up": {
+                    "pre": [
+                        "url",
+                        "url"
+                    ],
+                    "post": [
+                        "url"
+                    ]
+                },
+                "scale_down": {
+                    "pre": [
+                        "url",
+                        "url"
+                    ],
+                    "post": [
+                        "url"
+                    ]
+                }
+            },
+            "plugins":{
+                "raxmon":{
+                    "scale_up_threshold": 0.6,
+                    "scale_down_threshold": 0.4,
+                    "check_type": "agent.load_average",
+                    "load_balancers": [17443]
+                }
             }
-        },
-        "type": "launch_server"
+        }
     }
 ```
 
-This has been tested on these images:
-
-- Ubuntu 14.04 LTS (PVHVM)
-- CentOS 6.5 (PVHVM)
-
-In the example the value of ```user_data``` contains the base64 encoded version of the following script:
-
-```
-$ echo -n "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=" | base64 -D
-#cloud-config
-
-packages:
-- python-pip
-
-runcmd:
-- [ pip, install, RAX-AutoScaler ]
-```
-
-FYI - To base64 encode a script:
-
-```
-cat /path/to/USER_DATA | base64
-```
-
-Size of ```USER_DATA``` can be reduced with gzip:
-
-```
-cat /path/to/USER_DATA | gzip | base64
-```
-
-### Note
-
-RAX-AutoScaler depends on Rackspace Monitoring Agent to get the data from nodes in scaling group.
-If the agent is not installed please read: [Install the Cloud Monitoring Agent](http://www.rackspace.com/knowledge_center/article/install-the-cloud-monitoring-agent)
-
 ## Contributing
 
-- Fork it
-- Create your feature branch (git checkout -b my-new-feature)
-- Commit your changes (git commit -am 'Add some feature')
-- Push to the branch (git push origin my-new-feature)
-- Create new Pull Request
+- Fork [rax-autoscaler](https://github.com/rackerlabs/rax-autoscaler) repository, and clone it on your laptop
+- Create *your feature* branch from *devel* branch: ```git checkout -b my-new-feature origin/devel```
+- Commit, comment, push to your fork on [GitHub](https://github.com), and create new *Pull Request*
+
+### Requirements
+
+You might want to install pip packages in your Python virtualenv:
+
+```pip install -r requirements-dev.txt```
 
 ## License
 

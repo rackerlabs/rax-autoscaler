@@ -20,7 +20,8 @@ Contents:
    :maxdepth: 2
 
    QuickStart
-   Sphinx
+   Configuration
+   Plugins
 
 .. automodule:: autoscale
    :members:
@@ -34,9 +35,6 @@ Contents:
 .. automodule:: cloudmonitor
    :members:
 
-.. automodule:: colouredconsolehandler
-   :members:
-   
 Indices and tables
 ==================
 

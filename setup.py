@@ -32,16 +32,21 @@ with open('requirements.txt') as f:
 setup(
     name='rax-autoscaler',
     version=VERSION,
-    url='https://github.com/boxidau/rax-autoscaler',
-    author='Simon Mirco, Simone Soldateschi, Suraj Thapa, Teddy Schmitz',
+    url='https://github.com/rackerlabs/rax-autoscaler',
+    author='Simon Mirco, Simone Soldateschi, Suraj Thapa, Teddy Schmitz, Jon Walton',
     author_email='''simon.mirco@rackspace.com,
 simone.soldateschi@rackspace.co.uk, suraj.thapa@rackspace.com,
-teddy.schmitz@rackspace.com''',
+teddy.schmitz@rackspace.com, jon.walton@rackspace.com''',
     data_files=[('config', ['config/config-template.json',
                             'config/logging.conf']), ],
     description='Rackspace Auto Scale made easy',
+    provides=['raxas.ext'],
     entry_points={
-        "console_scripts": ['autoscale = raxas.autoscale:main']
+        "console_scripts": ['autoscale = raxas.autoscale:main',
+                            'autoscale-config = raxas.autoscale_config:main'],
+        "raxas.ext": ['raxmon = raxas.core_plugins.raxmon:Raxmon',
+                      'raxclb = raxas.core_plugins.raxclb:Raxclb',
+                      'newrelic = raxas.core_plugins.newrelic:NewRelic']
     },
     keywords='rax rackspace autoscale scaling devops cloud openstack',
     maintainer='Simone Soldateschi',

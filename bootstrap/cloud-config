@@ -1,7 +1,10 @@
 #cloud-config
 
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
 # Install pip package on first boot
 packages:
+  - gcc
+  - python-devel
   - python-pip
 
 # Install rax-autoscaler

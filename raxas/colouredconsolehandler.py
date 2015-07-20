@@ -67,20 +67,20 @@ class ColouredConsoleHandler(logging.StreamHandler):
         myrecord = copy.copy(record)
 
         levelno = myrecord.levelno
-        if(levelno >= 50):  # CRITICAL / FATAL
+        if levelno >= 50:  # CRITICAL / FATAL
             myrecord.msg = self.decorate(self.BOLD + self.UNDERLINE +
                                          self.COLOURS['red'],
                                          str(myrecord.msg))
-        elif(levelno >= 40):  # ERROR
+        elif levelno >= 40:  # ERROR
             myrecord.msg = self.decorate(self.COLOURS['red'],
                                          str(myrecord.msg))
-        elif(levelno >= 30):  # WARNING
+        elif levelno >= 30:  # WARNING
             myrecord.msg = self.decorate(self.COLOURS['yellow'],
                                          str(myrecord.msg))
-        elif(levelno >= 20):  # INFO
+        elif levelno >= 20:  # INFO
             myrecord.msg = self.decorate(self.COLOURS['green'],
                                          str(myrecord.msg))
-        elif(levelno >= 10):  # DEBUG
+        elif levelno >= 10:  # DEBUG
             myrecord.msg = self.decorate(self.COLOURS['blue'],
                                          str(myrecord.msg))
         else:  # NOTSET and anything else

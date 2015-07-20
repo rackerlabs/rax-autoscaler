@@ -1,7 +1,10 @@
 #cloud-config
 
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
 # Install pip package on first boot
 packages:
+  - gcc
+  - python-devel
   - python-pip
 
 # Install rax-autoscaler, pystress
@@ -21,7 +24,7 @@ write_files:
      content: |
           PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
           * * * * * root autoscale --cluster >/tmp/autoscale.log 2>&1
-    
+
    - path: /etc/rax-autoscaler/config.json
      owner: root:root
      permissions: '0644'

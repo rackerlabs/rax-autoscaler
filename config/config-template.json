@@ -1,39 +1,44 @@
 {
-  "auth": {
-    "os_username": "api_username",
-    "os_password": "api_key",
-    "os_region_name": "os_region_name"
-  },
-  "autoscale_groups": {
-      "group0": {
-          "group_id": "group id",
-          "scale_up_policy": "scale up policy id",
-          "scale_down_policy": "scale down policy id",
-          "check_type": "agent.load_average",
-          "check_config": {},
-          "metric_name": "1m",
-          "scale_up_threshold": 0.6,
-          "scale_down_threshold": 0.4,
-          "webhooks": {
-              "scale_up": {
-                 "pre": [
-                      "url",
-                      "url"
-                  ],
-                 "post": [
-                      "url"
-                  ]
-              },
-              "scale_down": {
-                  "pre": [
-                      "url",
-                      "url"
-                   ],
-                 "post": [
-                    "url"
-                  ]      
-              }
-          }
-      }
-  }
+    "auth": {
+        "os_username": "api_username",
+        "os_password": "api_key",
+        "os_region_name": "os_region_name"
+    },
+    "autoscale_groups": {
+        "group0": {
+            "group_id": "group id",
+            "scale_up_policy": "scale up policy id",
+            "scale_down_policy": "scale down policy id",
+            "webhooks": {
+                "scale_up": {
+                    "pre": [
+                        "url",
+                        "url"
+                    ],
+                    "post": [
+                        "url"
+                    ]
+                },
+                "scale_down": {
+                    "pre": [
+                        "url",
+                        "url"
+                    ],
+                    "post": [
+                        "url"
+                    ]
+                }
+            },
+            "plugins":{
+                "raxmon":{
+                    "scale_up_threshold": 0.6,
+                    "scale_down_threshold": 0.4,
+                    "check_config": {},
+                    "metric_name": "1m",
+                    "check_type": "agent.load_average",
+                    "max_samples": 10
+                }
+            }
+        }
+    }
 }

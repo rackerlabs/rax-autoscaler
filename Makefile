@@ -17,6 +17,12 @@ source:
 	$(PYTHON) setup.py sdist
 	rm -rf rax_autoscaler.egg-info
 
+upload2container: source
+	date +"%y%m%d%H%M%S">dist/readme
+	cd dist && echo rax-autoscaler*>>readme
+	swift upload autoscale dist/rax-autoscaler*tar.gz dist/readme
+	swift upload autoscale dist/readme
+
 upload: source
 	$(PYTHON) setup.py sdist upload
 
@@ -26,14 +32,14 @@ upload: source
 #rpm:
 #	$(PYTHON) setup.py bdist_rpm --post-install=rpm/postinstall --pre-uninstall=rpm/preuninstall
 
-#test:
+test:
 #	unit2 discover -s tests -t .
 #	python -mpytest weasyprint
-#	nosetests
+	nosetests --config=.noserc -xv
 
 check:
-	find . -name \*.py | grep -v 'conf.py' | xargs pep8
-	# find . -name \*.py | grep -v "^test_" | xargs pylint --errors-only --reports=n
+	find . -name \*.py | grep -v 'conf.py' | xargs pep8 --max-line-length=100
+	# pylint raxas --rcfile=.pylintrc
 	# pyntch
 	# pyflakes
 	# pychecker
