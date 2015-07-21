@@ -37,6 +37,13 @@
                     "metric_name": "1m",
                     "check_type": "agent.load_average",
                     "max_samples": 10
+                },
+                "raxmon_autoscale":{
+                    "check_config": {"file": "autoscale.py"},
+                    "metric_name": "scale_me",
+                    "check_type": "agent.plugin",
+                    "load_balancer": "12345",
+                    "max_samples": 10
                 }
             }
         }
