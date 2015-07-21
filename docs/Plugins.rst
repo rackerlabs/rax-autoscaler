@@ -20,7 +20,9 @@ your launch_configuration.
 This is used to help smooth out fluctuations in the connection count so we do not scale on small
 fluctuations.
 
-Config should look like this::
+Config should look like this:
+
+.. code-block:: json
 
     "raxmon":{
         "scale_up_threshold": 0.6,
@@ -58,7 +60,9 @@ The algorithm is:
 This is used to help smooth out fluctuations in the connection count so we do not scale on small
 fluctuations.
 
-Config should look like this::
+Config should look like this:
+
+.. code-block:: json
 
     "raxclb":{
         "scale_up_threshold": 100,
@@ -77,12 +81,47 @@ this number by the number of servers currently active in the group.  If we go un
 number we will scale down.  Default is 1
 
 check_type - set this to SSL if you want to check SSL connection counts instead of
-regular http.  Default is to not check SSL.
+regular http.  Default is to **not** check SSL.
 
 loadbalancers - provide a list of loadbalancer ids to check.  If you do not provide
 this we will detect the loadbalancer(s) in use by the scaling group and check all of them
 and aggregate results.  Otherwise we will only check the loadbalancer ids you provide here.
 Default is an empty list (Auto-detect loadbalancers).
+
+New Relic
+---------
+Plugin for New Relic monitoring
+
+Connects to New Relic monitoring API to view data and make a scaling decision based on that data.
+
+Config should look like this:
+
+.. code-block:: json
+
+     "newrelic":{
+         "api_key": "",
+         "application_name":"<optional>",
+         "scale_up_threshold": 0.6,
+         "scale_down_threshold": 0.4,
+         "metric_name": "System/Load",
+         "metric_value": "average_value"
+     }
+
+api_key - this should be set to the your New Relic api key
+
+scale_up_threshold - Set this to a value that makes sense for the check you are performing.
+If we go over this number we will scale up.
+
+scale_down_threshold - Set this to a value that makes sense for the check you are performing.
+If we go under this number we will scale down.
+
+metric_name - a valid New Relic metric name
+
+metric_value - a valid New Relic metric value.
+
+To see valid metric names and values please use the New Relic API explorer.
+- For applications : https://rpm.newrelic.com/api/explore/applications/metric_names
+- For Servers : https://rpm.newrelic.com/api/explore/servers/names
 
 Creating Plugins
 ================

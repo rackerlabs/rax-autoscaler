@@ -17,6 +17,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Example config:
+#
+#     "raxclb":{
+#         "scale_up_threshold": 50,
+#         "scale_down_threshold": 1,
+#         "check_type": "",
+#         "load_balancers": <optional>
+#     }
 
 import pyrax
 from raxas.core_plugins.base import PluginBase

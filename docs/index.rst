@@ -20,6 +20,7 @@ Contents:
    :maxdepth: 2
 
    QuickStart
+   Configuration
    Plugins
 
 .. automodule:: autoscale
@@ -32,9 +33,6 @@ Contents:
    :members:
 
 .. automodule:: cloudmonitor
-   :members:
-
-.. automodule:: colouredconsolehandler
    :members:
 
 Indices and tables

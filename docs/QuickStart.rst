@@ -10,20 +10,18 @@ Installation
 Configuration
 =============
 
-Edit config.json adding the following:
+Create ``config.json`` based on `config-template.json<https://github.com/rackerlabs/rax-autoscaler/blob/master/config/config-template.json>`, and edit the following:
 * API username
 * API key
 * Region name
 * Autoscaling group section should contain:
-
   * AutoScale Group UUID
-  * Scale Up Policy UUID
-  * Scale Down Policy UUID
-  * Check Type (agent.cpu, agent.load_average...)
-  * Metric Name (depends on the check type)
-  * Scale Up Threshold
-  * Scale Down Threshold
-  * Webhooks Url (Pre & Post commit url(s) for scale up/down)
+  * Autoscale Scale Up Webhook Policy UUID
+  * Autoscale Scale Down Webhook Policy UUID
+  * Application webhook urls (Optional, can be removed if not using)
+  * Plugins section
+    * Name of plugin
+    * Configuration directives specific to that plugin type
 
 Usage
 =====
@@ -42,8 +40,9 @@ Cloud Init
 ==========
 
 You can use the cloud-config file to auto-install RAX-Autoscaler on new servers.  For example to do so on Rackspace cloud using supernova
+::
 
-  *supernova <region> boot --user-data ./cloud-config --image <image id/name> --flavor <flavor id/name> --config-drive=true <server name>*
+  supernova <region> boot --user-data ./cloud-config --image <image id/name> --flavor <flavor id/name> --config-drive=true <server name>
 
 To use this with autoscale you would want to set the userdata of your launch configuration to the base64 encoded string of the file:
 
@@ -56,7 +55,7 @@ To use this with autoscale you would want to set the userdata of your launch con
                 "flavorRef": "general1-1",
                 "imageRef": "CentOS 6.5 (PVHVM)",
                 "key_name" : "MY_SSH_KEY",
-                "user_data" : "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=",
+                "user_data" : "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgogIHJ1bmNtZDoKICAgIC0gWyBwaXAsIGluc3RhbGwsIFJBWC1BdXRvU2NhbGVyPT0wLjIuMjkgXQo=",
                 "name": "test-autoscale"
             }
         },
@@ -72,16 +71,19 @@ This has been tested on these images:
 In the example the value of user_data contains the base64 encoded version of the following script:
 ::
 
-  echo -n "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgpydW5jbWQ6CiAgLSBbIHBpcCwgaW5zdGFsbCwgUkFYLUF1dG9TY2FsZXIgXQo=" | base64 -D
-
+  echo -n "I2Nsb3VkLWNvbmZpZwoKcGFja2FnZXM6CiAgLSBweXRob24tcGlwCgogIHJ1bmNtZDoKICAgIC0gWyBwaXAsIGluc3RhbGwsIFJBWC1BdXRvU2NhbGVyPT0wLjIuMjkgXQo=" | base64 -D
 
 To base64 encode a script
 ::
-cat /path/to/USER_DATA | base64
+
+    cat /path/to/USER_DATA | base64
 
 Size of USER_DATA can be reduced with gzip:
 ::
-cat /path/to/USER_DATA | gzip | base64
+
+    cat /path/to/USER_DATA | gzip | base64
+
+If you are running autoscaler through cloud-init or any other automated system it is very important that you pin the version as newer versions may introduce breaking changes with previous versions.
 
 config.json
 ===========
@@ -113,14 +115,6 @@ I'm going to quote the config/config-template.json file to make it easier to exp
           "scale_down_policy": "scale down policy id",
 
 scale_up_policy and scale_down_policy requires the UUID of the policies configured as webhooks in the portal. You can retrieve the UUID in pitchfork by calling the Get Policies List method https://cloud-api.info/autoscale/#get_policies_list-autoscale
-
-.. code-block:: json
-
-          "check_type": "agent.load_average",
-          "check_config": {},
-          "metric_name": "1m",
-
-currently, the only check type we have is load_average (ram utilisation is on the backlog)
 
 
 Webhook urls are an optional URL to call when we scale up or down. Pre is called before we call the Rackspace API, post is called after. You can configure multiple urls (or just a single url) to call at each stage.
