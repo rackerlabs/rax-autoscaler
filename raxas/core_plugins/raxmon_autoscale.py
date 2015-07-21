@@ -17,6 +17,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# Config Example
+#            "plugins":{
+#                "raxmon_autoscale":{
+#                    "check_config": {"file": "autoscale.py"},
+#                    "metric_name": "scale_me",
+#                    "check_type": "agent.plugin",
+#                    "load_balancer": "123456",
+#                    "max_samples": 10
+#                }
+#            }
+#
+# The load_balancer key is optional, and enables node health checking. This prevents the
+# scale-down action from being performed if the number of healthy nodes in the specified load balancer
+# is less than the number of active nodes in the scaling group. This prevent instances where
+# autoscale may inadvertently remove healthy nodes and leaving only unhealthy ones.
+#
+# This plugin relies on the monitoring data from a Rackspace Monitoring plugin, which you can
+# find in the contrib/ directory. This should be placed in /usr/lib/rackspace-monitoring-agent/plugins/ and
+# made executable on each server in the autoscale group (through cloud-init, config management tools or already in an image).
+# This file runs local health checks (currently load average, number of active connections and memory free pct), and
+# reports its wish to either scale down, up or do nothing based on its own health.
+# You should edit the threshold values near the top of the file to fit your particular workload.
+#
+# The code below collects the individual wishes of all servers, and makes a collective decisioni by applying some logic.
+# For example:
+# (assume three active servers)
+# One server wants to scale up = scale up (if a single node wants to scale up, we disregard everyone else)
+# Two servers wants to scale down, one "do nothing" = do nothing
+# Three servers want to scale down = scale down
+
 
 import logging
 import random
