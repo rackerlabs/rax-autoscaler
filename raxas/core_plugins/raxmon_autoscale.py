@@ -24,15 +24,16 @@
 #                    "check_config": {"file": "autoscale.py"},
 #                    "metric_name": "scale_me",
 #                    "check_type": "agent.plugin",
-#                    "load_balancer": "123456",
+#                    "load_balancers": [123456, 789101],
 #                    "max_samples": 10
 #                }
 #            }
 #
-# The load_balancer key is optional, and enables node health checking. This prevents the
-# scale-down action from being performed if the number of healthy nodes in the specified load balancer
-# is less than the number of active nodes in the scaling group. This prevent instances where
-# autoscale may inadvertently remove healthy nodes and leaving only unhealthy ones.
+# The load_balancers key is optional, and enables node health checking. This prevents the
+# scale-down action from being performed if the number of healthy nodes in any of the
+# specified load balancers is less than the number of active nodes in the scaling group.
+# This prevent instances where autoscale may inadvertently remove healthy
+# nodes and leaving only unhealthy ones.
 #
 # This plugin relies on the monitoring data from a Rackspace Monitoring plugin, which you can
 # find in the contrib/ directory. This should be placed in /usr/lib/rackspace-monitoring-agent/plugins/ and
@@ -41,7 +42,7 @@
 # reports its wish to either scale down, up or do nothing based on its own health.
 # You should edit the threshold values near the top of the file to fit your particular workload.
 #
-# The code below collects the individual wishes of all servers, and makes a collective decisioni by applying some logic.
+# The code below collects the individual wishes of all servers, and makes a collective decision by applying some logic.
 # For example:
 # (assume three active servers)
 # One server wants to scale up = scale up (if a single node wants to scale up, we disregard everyone else)
@@ -75,7 +76,7 @@ class Raxmon_autoscale(PluginBase):
         self.metric_name = config.get('metric_name', 'scale_me')
         self.check_type = config.get('check_type', 'agent.plugin')
         self.max_samples = config.get('max_samples', 10)
-        self.lb = config.get('load_balancer', None)
+        self.lbs = config.get('load_balancers', None)
         self.scaling_group = scaling_group
 
     @property
@@ -153,22 +154,27 @@ class Raxmon_autoscale(PluginBase):
                 scale_actions.iteritems(), key=operator.itemgetter(1))[0]
             logger.info("Collective decision: %s" % winner)
 
-        if winner == scale_down and self.lb:
+        if winner == scale_down and self.lbs:
             active_server_count = self.scaling_group.state['active_capacity']
-            num_healthy_nodes = self.get_lb_status(self.lb)
-            if num_healthy_nodes < active_server_count:
-                logger.warning("Consensus was to scale down - but number of servers in scaling group (%s) exceeds the number of healthy nodes in the load balancer (%s). NOT scaling down!" %
-                               (active_server_count, num_healthy_nodes))
-                winner = do_nothing
+            clb = pyrax.cloud_loadbalancers
+            for load_balancer in self.lbs:
+                num_healthy_nodes = self.get_lb_status(load_balancer, clb)
+                if num_healthy_nodes < active_server_count:
+                    logger.warning("Consensus was to scale down - but number of"
+                                   " servers in scaling group (%s) exceeds the number"
+                                   " of healthy nodes in load balancer %d (%s)."
+                                   " NOT scaling down!" % (active_server_count,
+                                                          load_balancer,
+                                                          num_healthy_nodes))
+                    winner = do_nothing
 
         return winner
 
-    def get_lb_status(self, load_balancer):
+    def get_lb_status(self, load_balancer, clb):
         """ This function cehcks that the nodes behind a loadbalancer are healthy.
             This is in order to prevent scaling down when the nodes in an existing group
             are unhealthy
         """
-        clb = pyrax.cloud_loadbalancers
         lb = clb.get(load_balancer)
         # If there are no nodes at all under an LB, the attribute 'nodes'
         # doesn't exist at all
