@@ -36,16 +36,19 @@
 # nodes and leaving only unhealthy ones.
 #
 # This plugin relies on the monitoring data from a Rackspace Monitoring plugin, which you can
-# find in the contrib/ directory. This should be placed in /usr/lib/rackspace-monitoring-agent/plugins/ and
-# made executable on each server in the autoscale group (through cloud-init, config management tools or already in an image).
-# This file runs local health checks (currently load average, number of active connections and memory free pct), and
-# reports its wish to either scale down, up or do nothing based on its own health.
+# find in the contrib/ directory. This should be placed in
+# /usr/lib/rackspace-monitoring-agent/plugins/ and made executable on each server in the
+# autoscale group (through cloud-init, config management tools or already in an image).
+# This file runs local health checks (currently load average, number of active connections
+# and memory free pct), and reports its wish to either scale down, up or do nothing based
+# on its own health.
 # You should edit the threshold values near the top of the file to fit your particular workload.
 #
-# The code below collects the individual wishes of all servers, and makes a collective decision by applying some logic.
+# The code below collects the individual wishes of all servers, and makes a collective decision
+# by applying some logic.
 # For example:
 # (assume three active servers)
-# One server wants to scale up = scale up (if a single node wants to scale up, we disregard everyone else)
+# One server wants to scale up = scale up (if a single node wants to do so, we disregard all else)
 # Two servers wants to scale down, one "do nothing" = do nothing
 # Three servers want to scale down = scale down
 
@@ -164,8 +167,8 @@ class Raxmon_autoscale(PluginBase):
                                    " servers in scaling group (%s) exceeds the number"
                                    " of healthy nodes in load balancer %d (%s)."
                                    " NOT scaling down!" % (active_server_count,
-                                                          load_balancer,
-                                                          num_healthy_nodes))
+                                                           load_balancer,
+                                                           num_healthy_nodes))
                     winner = do_nothing
 
         return winner
