@@ -138,21 +138,21 @@ class Raxmon_autoscale(PluginBase):
         if num_results == 0:
             logger.error('No data available')
             return None
-        else:
-            for result in results:
-                if result not in scale_actions.keys():
-                    logger.info(
-                        "Duff data back from monitoring '%s' not a valid return" % result)
-                    continue
-                scale_actions[result] += 1
-            if scale_actions.get(scale_up) > 0:
-                logger.info(
-                    "At least one node reports the wish to scale - scaling up...")
-                return scale_up
 
-            winner = max(
-                scale_actions.iteritems(), key=operator.itemgetter(1))[0]
-            logger.info("Collective decision: %s" % winner)
+        for result in results:
+            if result not in scale_actions.keys():
+                logger.info(
+                    "Duff data back from monitoring '%s' not a valid return" % result)
+                continue
+            scale_actions[result] += 1
+        if scale_actions.get(scale_up) > 0:
+            logger.info(
+                "At least one node reports the wish to scale - scaling up...")
+            return scale_up
+
+        winner = max(
+            scale_actions.iteritems(), key=operator.itemgetter(1))[0]
+        logger.info("Collective decision: %s" % winner)
 
         if winner == scale_down and self.lbs:
             active_server_count = self.scaling_group.state['active_capacity']
