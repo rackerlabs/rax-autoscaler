@@ -72,9 +72,6 @@ class Raxmon_autoscale(PluginBase):
 
         config = scaling_group.plugin_config.get(self.name)
 
-        self.scale_up_value = config.get('scale_up_value', 2)
-        self.scale_down_value = config.get('scale_down_value', 1)
-        self.do_nothing_value = config.get('do_nothing_value', 3)
         self.check_config = config.get('check_config', {})
         self.metric_name = config.get('metric_name', 'scale_me')
         self.check_type = config.get('check_type', 'agent.plugin')
