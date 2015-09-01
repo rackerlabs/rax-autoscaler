@@ -146,3 +146,38 @@ class Raxmon_autoscaleTest(unittest2.TestCase):
 
         raxmon_autoscale = Raxmon_autoscale(self.scaling_group)
         self.assertEquals(raxmon_autoscale.make_decision(), 0)
+
+    def test_add_missing_check(self, mock_cloud_monitoring):
+        """ Tests whether missing check is added. """
+
+        self.scaling_group.active_servers = ['server1']
+
+        entity = fakes.FakeCloudMonitorEntity(info={'agent_id': 'server1'})
+
+        entity = MagicMock(spec=CloudMonitorEntity)
+        agent_id = PropertyMock(return_value='server1')
+        type(entity).agent_id = agent_id
+
+        class mock_ipaddr(object):
+            def values(self):
+                return ['1.1.1.1', '2.2.2.2']
+        mock_ip = mock_ipaddr()
+        type(entity).ip_addresses = mock_ip
+
+        check = MagicMock(spec=CloudMonitorCheck)
+        check_type = PropertyMock(return_value='NOTagent.plugin')
+        type(check).type = check_type
+        check.get_metric_data_points.return_value = [{'average': -1}]
+
+        mock_cloud_monitoring.list_entities.return_value = [entity]
+
+        entity.create_check = MagicMock()
+        raxmon_autoscale = Raxmon_autoscale(self.scaling_group)
+        raxmon_autoscale.make_decision()
+
+        entity.create_check.assert_called_once_with(check_type='agent.plugin',
+                                                    target_alias='1.1.1.1',
+                                                    period=30,
+                                                    label='scale_me_agent.plugin',
+                                                    details={},
+                                                    timeout=15)
