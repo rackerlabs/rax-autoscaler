@@ -24,27 +24,31 @@
 #                    "check_config": {"file": "autoscale.py"},
 #                    "metric_name": "scale_me",
 #                    "check_type": "agent.plugin",
-#                    "load_balancer": "123456",
+#                    "load_balancers": [123456, 789101],
 #                    "max_samples": 10
 #                }
 #            }
 #
-# The load_balancer key is optional, and enables node health checking. This prevents the
-# scale-down action from being performed if the number of healthy nodes in the specified load balancer
-# is less than the number of active nodes in the scaling group. This prevent instances where
-# autoscale may inadvertently remove healthy nodes and leaving only unhealthy ones.
+# The load_balancers key is optional, and enables node health checking. This prevents the
+# scale-down action from being performed if the number of healthy nodes in any of the
+# specified load balancers is less than the number of active nodes in the scaling group.
+# This prevent instances where autoscale may inadvertently remove healthy
+# nodes and leaving only unhealthy ones.
 #
 # This plugin relies on the monitoring data from a Rackspace Monitoring plugin, which you can
-# find in the contrib/ directory. This should be placed in /usr/lib/rackspace-monitoring-agent/plugins/ and
-# made executable on each server in the autoscale group (through cloud-init, config management tools or already in an image).
-# This file runs local health checks (currently load average, number of active connections and memory free pct), and
-# reports its wish to either scale down, up or do nothing based on its own health.
+# find in the contrib/ directory. This should be placed in
+# /usr/lib/rackspace-monitoring-agent/plugins/ and made executable on each server in the
+# autoscale group (through cloud-init, config management tools or already in an image).
+# This file runs local health checks (currently load average, number of active connections
+# and memory free pct), and reports its wish to either scale down, up or do nothing based
+# on its own health.
 # You should edit the threshold values near the top of the file to fit your particular workload.
 #
-# The code below collects the individual wishes of all servers, and makes a collective decisioni by applying some logic.
+# The code below collects the individual wishes of all servers, and makes a collective decision
+# by applying some logic.
 # For example:
 # (assume three active servers)
-# One server wants to scale up = scale up (if a single node wants to scale up, we disregard everyone else)
+# One server wants to scale up = scale up (if a single node wants to do so, we disregard all else)
 # Two servers wants to scale down, one "do nothing" = do nothing
 # Three servers want to scale down = scale down
 
@@ -68,14 +72,11 @@ class Raxmon_autoscale(PluginBase):
 
         config = scaling_group.plugin_config.get(self.name)
 
-        self.scale_up_value = config.get('scale_up_value', 2)
-        self.scale_down_value = config.get('scale_down_value', 1)
-        self.do_nothing_value = config.get('do_nothing_value', 3)
         self.check_config = config.get('check_config', {})
         self.metric_name = config.get('metric_name', 'scale_me')
         self.check_type = config.get('check_type', 'agent.plugin')
         self.max_samples = config.get('max_samples', 10)
-        self.lb = config.get('load_balancer', None)
+        self.lbs = config.get('load_balancers', None)
         self.scaling_group = scaling_group
 
     @property
@@ -137,38 +138,43 @@ class Raxmon_autoscale(PluginBase):
         if num_results == 0:
             logger.error('No data available')
             return None
-        else:
-            for result in results:
-                if result not in scale_actions.keys():
-                    logger.info(
-                        "Duff data back from monitoring '%s' not a valid return" % result)
-                    continue
-                scale_actions[result] += 1
-            if scale_actions.get(scale_up) > 0:
+
+        for result in results:
+            if result not in scale_actions.keys():
                 logger.info(
-                    "At least one node reports the wish to scale - scaling up...")
-                return scale_up
+                    "Duff data back from monitoring '%s' not a valid return" % result)
+                continue
+            scale_actions[result] += 1
+        if scale_actions.get(scale_up) > 0:
+            logger.info(
+                "At least one node reports the wish to scale - scaling up...")
+            return scale_up
 
-            winner = max(
-                scale_actions.iteritems(), key=operator.itemgetter(1))[0]
-            logger.info("Collective decision: %s" % winner)
+        winner = max(
+            scale_actions.iteritems(), key=operator.itemgetter(1))[0]
+        logger.info("Collective decision: %s" % winner)
 
-        if winner == scale_down and self.lb:
+        if winner == scale_down and self.lbs:
             active_server_count = self.scaling_group.state['active_capacity']
-            num_healthy_nodes = self.get_lb_status(self.lb)
-            if num_healthy_nodes < active_server_count:
-                logger.warning("Consensus was to scale down - but number of servers in scaling group (%s) exceeds the number of healthy nodes in the load balancer (%s). NOT scaling down!" %
-                               (active_server_count, num_healthy_nodes))
-                winner = do_nothing
+            clb = pyrax.cloud_loadbalancers
+            for load_balancer in self.lbs:
+                num_healthy_nodes = self.get_lb_status(load_balancer, clb)
+                if num_healthy_nodes < active_server_count:
+                    logger.warning("Consensus was to scale down - but number of"
+                                   " servers in scaling group (%s) exceeds the number"
+                                   " of healthy nodes in load balancer %d (%s)."
+                                   " NOT scaling down!" % (active_server_count,
+                                                           load_balancer,
+                                                           num_healthy_nodes))
+                    winner = do_nothing
 
         return winner
 
-    def get_lb_status(self, load_balancer):
+    def get_lb_status(self, load_balancer, clb):
         """ This function cehcks that the nodes behind a loadbalancer are healthy.
             This is in order to prevent scaling down when the nodes in an existing group
             are unhealthy
         """
-        clb = pyrax.cloud_loadbalancers
         lb = clb.get(load_balancer)
         # If there are no nodes at all under an LB, the attribute 'nodes'
         # doesn't exist at all
