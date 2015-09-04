@@ -129,13 +129,12 @@ class Raxmon_autoscale(PluginBase):
                             self.max_samples)
                 break
 
-        num_results = len(results)
         scale_down = -1
         scale_up = 1
         do_nothing = 0
         scale_actions = {scale_down: 0, do_nothing: 0, scale_up: 0}
         winner = 0
-        if num_results == 0:
+        if not results:
             logger.error('No data available')
             return None
 
