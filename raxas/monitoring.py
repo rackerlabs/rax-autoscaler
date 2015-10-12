@@ -32,7 +32,7 @@ def get_entities(scaling_group):
             if entity.agent_id in active_servers]
 
 
-def add_entity_checks(entities, check_type, metric_name, check_config={},
+def add_entity_checks(entities, check_type, metric_name, check_config=None,
                       period=30, timeout=15):
     """This function ensures each entity has a cloud monitoring check.
        If the specific check in the json configuration data already exists, it will take
