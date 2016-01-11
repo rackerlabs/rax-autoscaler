@@ -4,7 +4,6 @@
 # Remember to chmod +x
 
 import os
-import subprocess
 from decimal import *
 
 # Format of these (scale_down_threshold, scale_up_threshold) - anything in
@@ -12,7 +11,7 @@ from decimal import *
 load_average = (1.0, 2.0)
 connections_port = 80
 num_conns = (1, 50)
-memory_pct = (15.0, 60.0)
+memory_pct_used = (15.0, 60.0)
 
 
 # Internal variables - do not modify #
@@ -80,7 +79,8 @@ def get_phys_mem_pct():
     mem_free = meminfo.get(
         'MemFree') + meminfo.get('Buffers') + meminfo.get('Cached')
     getcontext().prec = 3
-    return Decimal(((Decimal(meminfo.get('MemTotal')) / Decimal(mem_free)) - 1) * 100)
+    return Decimal(
+        100-(Decimal(mem_free)*100/Decimal(meminfo.get('MemTotal'))))
 
 
 load_avg_scale = do_nothing
@@ -106,11 +106,11 @@ elif num_connections <= num_conns[0]:
 
 phys_mem_pct = get_phys_mem_pct()
 phys_mem_scale = do_nothing
-if memory_pct[0] < phys_mem_pct < memory_pct[1]:
+if memory_pct_used[0] < phys_mem_pct < memory_pct_used[1]:
     phys_mem_scale = do_nothing
-elif phys_mem_pct >= memory_pct[1]:
+elif phys_mem_pct >= memory_pct_used[1]:
     phys_mem_scale = scale_up
-elif phys_mem_pct <= memory_pct[0]:
+elif phys_mem_pct <= memory_pct_used[0]:
     phys_mem_scale = scale_down
 
 scale = make_decision(load_avg_scale, num_connections_scale, phys_mem_scale)
