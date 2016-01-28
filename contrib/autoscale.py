@@ -6,6 +6,7 @@
 import os
 from decimal import *
 
+# EDIT THE THRESHOLDS BELOW TO SUIT YOUR SET-UP.
 # Format of these (scale_down_threshold, scale_up_threshold) - anything in
 # between results in a NOOP
 load_average = (1.0, 2.0)
