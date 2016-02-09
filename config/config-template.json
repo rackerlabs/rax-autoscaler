@@ -43,6 +43,7 @@
                     "metric_name": "scale_me",
                     "check_type": "agent.plugin",
                     "load_balancers": [12345],
+                    "num_static_servers": 0,
                     "max_samples": 10
                 }
             }

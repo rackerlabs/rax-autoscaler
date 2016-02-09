@@ -25,6 +25,7 @@
 #                    "metric_name": "scale_me",
 #                    "check_type": "agent.plugin",
 #                    "load_balancers": [123456, 789101],
+#                    "num_static_servers": 2,
 #                    "max_samples": 10
 #                }
 #            }
@@ -34,6 +35,11 @@
 # specified load balancers is less than the number of active nodes in the scaling group.
 # This prevent instances where autoscale may inadvertently remove healthy
 # nodes and leaving only unhealthy ones.
+# If you have nodes under the same load balancer which aren't part of the
+# autoscale group, you set num_static_servers to this number. This will then be
+# taken into account when the calculation of number of healthy servers vs.
+# number of nodes in the AS group is done.
+# (if healthy_nodes_in_lb < (autoscale_node_cnt + static_servers))
 #
 # This plugin relies on the monitoring data from a Rackspace Monitoring plugin, which you can
 # find in the contrib/ directory. This should be placed in
@@ -77,6 +83,7 @@ class Raxmon_autoscale(PluginBase):
         self.metric_name = config.get('metric_name', 'scale_me')
         self.check_type = config.get('check_type', 'agent.plugin')
         self.max_samples = config.get('max_samples', 10)
+        self.num_static_servers = config.get('num_static_servers', 0)
         self.lbs = config.get('load_balancers', None)
         self.scaling_group = scaling_group
 
@@ -158,7 +165,8 @@ class Raxmon_autoscale(PluginBase):
             clb = pyrax.cloud_loadbalancers
             for load_balancer in self.lbs:
                 num_healthy_nodes = self.get_lb_status(load_balancer, clb)
-                if num_healthy_nodes < active_server_count:
+                if num_healthy_nodes < (
+                        active_server_count + self.num_static_servers):
                     logger.warning("Consensus was to scale down - but number of"
                                    " servers in scaling group (%s) exceeds the number"
                                    " of healthy nodes in load balancer %d (%s)."
