@@ -167,8 +167,9 @@ class Raxmon_autoscale(PluginBase):
                 num_healthy_nodes = self.get_lb_status(load_balancer, clb)
                 if num_healthy_nodes < (
                         active_server_count + self.num_static_servers):
-                    logger.warning("Consensus was to scale down - but number of"
-                                   " servers in scaling group (%s) exceeds the number"
+                    logger.warning("Consensus was to scale down - but number"
+                                   " of servers in scaling group (%s) plus any"
+                                   " static nodes exceeds the number"
                                    " of healthy nodes in load balancer %d (%s)."
                                    " NOT scaling down!" % (active_server_count,
                                                            load_balancer,
