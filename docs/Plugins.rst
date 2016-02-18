@@ -24,13 +24,14 @@ Config should look like this:
 
 .. code-block:: json
 
-    "raxmon":{
-        "scale_up_threshold": 0.6,
-        "scale_down_threshold": 0.4,
-        "check_config": {},
-        "metric_name": "1m",
-        "check_type": "agent.load_average"
-    }
+     "raxmon":{
+         "scale_up_threshold": 0.6,
+         "scale_down_threshold": 0.4,
+         "check_config": {},
+         "metric_name": "1m",
+         "check_type": "agent.load_average",
+         "max_samples": 10
+     }
 
 scale_up_threshold - Set this to a value that makes sense for the check you are performing.
 If we go over this number we will scale up.
@@ -46,6 +47,9 @@ average)
 
 metric_name - Name of metric checked.  We are checking the load_average over 1 minute periods
 so the metric name could be 1m.  Default is 1m
+
+max_samples - How many samples to pull from Rackspace monitoring, this helps limit the number
+of API calls so you don't go over the daily limit.
 
 Raxclb
 ------
