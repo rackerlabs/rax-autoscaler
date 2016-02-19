@@ -69,7 +69,7 @@ class MonitoringTest(BaseTest):
         entity.create_check = MagicMock()
         monitoring.add_entity_checks([entity], 'agent.plugin', 'inconsequenial')
 
-        entity.create_check.assert_called_once()
+        self.assertTrue(entity.create_check.called)
 
     @patch('pyrax.cloud_monitoring')
     def test_skip_add_entity_check(self, mock_cloud_monitoring):
@@ -120,4 +120,3 @@ class MonitoringTest(BaseTest):
         entity = fakes.FakeCloudMonitorEntity(info={'agent_id': 'NOTINASGRP'})
         mock_cloud_monitoring.list_entities.return_value = [entity]
         self.assertNotEqual(monitoring.get_entities(self.scaling_group), [entity])
-
