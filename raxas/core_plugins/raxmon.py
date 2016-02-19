@@ -123,4 +123,3 @@ class Raxmon(PluginBase):
         else:
             logger.info('Cluster within target parameters')
             return 0
-

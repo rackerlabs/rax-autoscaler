@@ -46,7 +46,7 @@
 # /usr/lib/rackspace-monitoring-agent/plugins/ and made executable on each server in the
 # autoscale group (through cloud-init, config management tools or already in an image).
 # This file runs local health checks (currently load average, number of active connections
-# and memory free pct), and reports its wish to either scale down, up or do nothing based
+# and memory pct used), and reports its wish to either scale down, up or do nothing based
 # on its own health.
 # You should edit the threshold values near the top of the file to fit your particular workload.
 #
@@ -196,4 +196,3 @@ class Raxmon_autoscale(PluginBase):
             if node.status == "ONLINE" and node.condition == "ENABLED":
                 num_healthy += 1
         return num_healthy
-
