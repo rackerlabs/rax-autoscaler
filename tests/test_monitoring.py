@@ -111,7 +111,6 @@ class MonitoringTest(BaseTest):
         mock_cloud_monitoring.list_entities.return_value = [entity]
         self.assertEqual(monitoring.get_entities(self.scaling_group), [entity])
 
-
     @patch('pyrax.cloud_monitoring')
     def test_return_no_entities(self, mock_cloud_monitoring):
         """ Test that monitoring.get_entities() ONLY returns entities that are

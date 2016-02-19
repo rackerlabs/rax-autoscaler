@@ -196,4 +196,3 @@ class Raxmon_autoscale(PluginBase):
             if node.status == "ONLINE" and node.condition == "ENABLED":
                 num_healthy += 1
         return num_healthy
-
