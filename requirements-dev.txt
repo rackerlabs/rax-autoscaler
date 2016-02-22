@@ -11,3 +11,4 @@ nose
 coverage
 newrelic-api
 importlib
+total-ordering
