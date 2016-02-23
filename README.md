@@ -16,7 +16,7 @@ pip install rax-autoscaler
 ```
 
 ### Configuration
-[Read the Docs](http://rax-autoscaler.readthedocs.org/en/stable/)
+[Read the Docs](http://rax-autoscale.readthedocs.org/en/stable/)
 
 ### What's New
 
