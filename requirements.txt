@@ -1,3 +1,4 @@
+oslo.config==3.0.0
 pyrax
 termcolor
 netifaces>=0.10.4
