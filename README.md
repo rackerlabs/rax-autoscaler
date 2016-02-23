@@ -18,6 +18,10 @@ pip install rax-autoscaler
 ### Configuration
 [Read the Docs](http://rax-autoscaler.readthedocs.org/en/stable/)
 
+### What's New
+
+V0.4 is here with a brand new plugin raxmon-autoscale, check it out in the documentation above.  Along for the ride are a host of improvements, and fixes.  Read the commit log if you have any questions and please create an issue if you see any regressions.
+
 ### Upgrading from 0.2
 
 V0.3 is a major change from 0.2 and as such there are many breaking changes in the configuration file.
