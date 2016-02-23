@@ -221,7 +221,7 @@ def exit_with_error(msg):
             log_file = logger.root.handlers[0].baseFilename
             logger.info('completed with an error: %s', log_file)
         except:
-            print('(error) %s', msg)
+            print('(error) %s' % msg)
             print('(info) rax-autoscale completed with an error')
 
     sys.exit(1)

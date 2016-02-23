@@ -30,8 +30,8 @@
 import logging
 import random
 import time
-import pyrax
 from raxas.core_plugins.base import PluginBase
+import raxas.monitoring as monitoring
 
 
 class Raxmon(PluginBase):
@@ -69,13 +69,15 @@ class Raxmon(PluginBase):
         logger = logging.getLogger(__name__)
 
         results = []
-        cm = pyrax.cloud_monitoring
-        active_servers = self.scaling_group.active_servers
 
-        entities = [entity for entity in cm.list_entities()
-                    if entity.agent_id in active_servers]
+        entities = monitoring.get_entities(self.scaling_group)
 
-        self.add_entity_checks(entities)
+        monitoring.add_entity_checks(entities,
+                                     self.check_type,
+                                     self.metric_name,
+                                     self.check_config,
+                                     period=60,
+                                     timeout=30)
 
         logger.info('Gathering Monitoring Data')
 
@@ -121,32 +123,3 @@ class Raxmon(PluginBase):
         else:
             logger.info('Cluster within target parameters')
             return 0
-
-    def add_entity_checks(self, entities):
-        """
-        This function ensures each entity has a cloud monitoring check.
-        If the specific check in the json configuration data already exists, it will take
-        no action on that entity
-
-        """
-        logger = logging.getLogger(__name__)
-
-        logger.info('Ensuring monitoring checks exist')
-
-        for entity in entities:
-            check_exists = len([c for c in entity.list_checks()
-                                if c.type == self.check_type])
-
-            if not check_exists:
-                ip_address = entity.ip_addresses.values()[0]
-                logger.debug('server_id: %s, ip_address: %s', entity.agent_id, ip_address)
-                entity.create_check(label='%s_%s' % (self.metric_name, self.check_type),
-                                    check_type=self.check_type,
-                                    details=self.check_config,
-                                    period=60, timeout=30,
-                                    target_alias=ip_address)
-                logger.info('ADD - Cloud monitoring check (%s) to server with id: %s',
-                            self.check_type, entity.agent_id)
-            else:
-                logger.info('SKIP - Cloud monitoring check (%s) already exists on server id: %s',
-                            self.check_type, entity.agent_id)
