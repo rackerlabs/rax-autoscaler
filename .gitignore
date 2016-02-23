@@ -6,7 +6,6 @@ include/
 *.swp
 .token_cache
 .idea
-README.txt
 logging.log
 .venv
 

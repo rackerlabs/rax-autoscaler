@@ -32,7 +32,7 @@ with open('requirements.txt') as f:
 setup(
     name='rax-autoscaler',
     version=VERSION,
-    url='https://github.com/boxidau/rax-autoscaler',
+    url='https://github.com/rackerlabs/rax-autoscaler',
     author='''Simon Mirco, Simone Soldateschi, Suraj Thapa, Teddy Schmitz,
 Jon Walton, Erik Ljungstrom''',
     author_email='''simon.mirco@rackspace.com,
