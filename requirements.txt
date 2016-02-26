@@ -42,3 +42,4 @@ six==1.10.0               # via debtcollector, keystoneauth1, mock, oslo.config,
 stevedore==1.10.0
 termcolor==1.1.0
 wrapt==1.10.6             # via debtcollector
+importlib==1.0.3
