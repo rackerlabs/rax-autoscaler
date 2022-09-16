@@ -24,7 +24,7 @@ os-virtual-interfacesv2-python-novaclient-ext==0.19  # via rackspace-novaclient
 oslo.config==3.0.0
 oslo.i18n==3.3.0          # via oslo.utils, python-keystoneclient, python-novaclient
 oslo.serialization==2.3.0  # via python-keystoneclient, python-novaclient
-oslo.utils==3.6.0         # via oslo.serialization, python-keystoneclient, python-novaclient
+oslo.utils==4.10.1         # via oslo.serialization, python-keystoneclient, python-novaclient
 pbr==1.8.1                # via debtcollector, keystoneauth1, mock, oslo.i18n, oslo.serialization, oslo.utils, positional, python-keystoneclient, python-novaclient, stevedore
 positional==1.0.1         # via keystoneauth1
 PrettyTable==0.7.2        # via python-keystoneclient, python-novaclient
